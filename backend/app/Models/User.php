@@ -23,4 +23,14 @@ class User extends Authenticatable
      * @return array<string, string>
      */
     
+
+    public function driver()
+    {
+        return $this->hasOne(Driver::class);
+    }       
+
+    public function trips()
+    {
+        return $this->hasMany(Trip::class);
+    }   
 }
