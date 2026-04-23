@@ -10,12 +10,17 @@ class LoginController extends Controller
 {
     public function submit(Request $request){
         $request->validate([
-            'phone' => 'required|numeric|min:10',
+            'phone' => 'required|numeric|digits:10',
         ]);
 
-        $user = User:: firstOrCreate([
-            'phone' => $request->phone,
-        ]);
+        $phone = $request->phone;
+
+// Convert 0912345678 → +251912345678
+$phone = '+251' . ltrim($phone, '0');
+
+$user = User::firstOrCreate([
+    'phone' => $phone,
+]);
 
         if(!$user){
             return response()->json([
@@ -29,4 +34,33 @@ class LoginController extends Controller
             'message' => 'Verification code sent to your phone',
         ], 200);
     }
+
+public function verify(Request $request){
+    $request->validate([
+        'phone' => 'required|digits:10',
+        'login_code' => 'required|digits:6',
+    ]);
+
+    // Format phone same as submit()
+    $phone = '+251' . ltrim($request->phone, '0');
+
+    $user = User::where('phone', $phone)
+                ->where('login_code', $request->code)
+                ->first();
+
+  if($user){
+    $user->update(['login_code' => null]);
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Login successful',
+        'token' => $token
+    ], 200);
+}
+
+    return response()->json([
+        'message' => 'Invalid phone number or verification code',
+    ], 401);
+}
 }
