@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Notifications\LoginNeedsVerification;
 
 class LoginController extends Controller
 {
@@ -22,6 +23,10 @@ class LoginController extends Controller
             ], 401);
         }
 
-        $user->notify();
+        $user->notify(new LoginNeedsVerification());
+
+        return response()->json([
+            'message' => 'Verification code sent to your phone',
+        ], 200);
     }
 }

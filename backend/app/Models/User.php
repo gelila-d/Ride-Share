@@ -22,7 +22,10 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    
+    public function routeNotificationForTwilio()
+    {
+        return $this->phone;
+    }
 
     public function driver()
     {
