@@ -41,12 +41,11 @@ public function verify(Request $request){
         'login_code' => 'required|digits:6',
     ]);
 
-    // Format phone same as submit()
-    $phone = '+251' . ltrim($request->phone, '0');
+  $phone = '+251' . ltrim($request->phone, '0');
 
-    $user = User::where('phone', $phone)
-                ->where('login_code', $request->code)
-                ->first();
+$user = User::where('phone', $phone)
+    ->where('login_code', $request->login_code)
+    ->first();
 
   if($user){
     $user->update(['login_code' => null]);
