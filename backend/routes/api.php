@@ -15,12 +15,12 @@ Route::group(['middleware' => 'auth:sanctum'], function(){
     Route::post('/driver', [DriverController::class,'update']);
 
     Route::post('/trip', [TripController::class,'store']);
-Route::get('/trips/{trip}', [TripController::class,'show']);
+Route::get('/trip/{trip}', [TripController::class,'show']);
 
-Route::post('/trips/{trip}/accept', [TripController::class,'accept']);
-Route::post('/trips/{trip}/start', [TripController::class,'start']);
-Route::post('/trips/{trip}/end', [TripController::class,'end']);
-Route::post('/trips/{trip}/location', [TripController::class,'location']);
+Route::post('/trip/{trip}/accept', [TripController::class,'accept']);
+Route::post('/trip/{trip}/start', [TripController::class,'start']);
+Route::post('/trip/{trip}/end', [TripController::class,'end']);
+Route::post('/trip/{trip}/location', [TripController::class,'location']);
 });
 
 

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TripAccepted;
 use Illuminate\Http\Request;
-
+  use App\Models\Trip;
 class TripController extends Controller
 {
     public function store(Request $request){
@@ -24,23 +25,26 @@ class TripController extends Controller
        
     }
 
-    public function show (Request $request, $trip){
-      if($trip->user_id == $request->user()->id){
+  
 
+public function show(Request $request, Trip $trip)
+{
+    // Check if user owns the trip
+    if ($trip->user_id == $request->user()->id) {
         return $trip;
     }
 
-     if($trip->driver && $request->user()->driver){
-        
-     
+    // Check if driver owns the trip
+    if ($trip->driver && $request->user()->driver) {
+        if ($trip->driver->id == $request->user()->driver->id) {
+            return $trip;
+        }
+    }
 
-    if($trip->driver->id == $request->user()->driver->id){
-        return $trip;
-    }}
-    
     return response()->json([
         'message' => 'You do not have access to this trip',
     ], 403);
+
 }
 public function accept (Request $request, $trip){
 
@@ -54,6 +58,7 @@ public function accept (Request $request, $trip){
 
 
     $trip->load('driver.user');
+    TripAccepted::dispatch($trip);
     return $trip;
 }
 
