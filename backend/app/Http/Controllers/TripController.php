@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Events\TripAccepted;
-use App\Events\TripAccepted as EventsTripAccepted;
 use App\Events\TripEnded;
 use App\Events\TripLocationUpdated;
 use App\Events\TripStarted;
