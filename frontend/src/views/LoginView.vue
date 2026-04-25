@@ -1,13 +1,24 @@
 <script setup>
 import { reactive} from 'vue';
-import { useRouter } from 'vue-router';
+import axios from 'axios';
 
-const data = reactive({
+const credentials = reactive({
   phone: null
 });
 const handleLogin =() =>{
-  console.log('Login button clicked');
-  console.log(data.phone);
+  axios.post('http://127.0.0.1:8000/api/login', {
+    phone: credentials.phone.replaceAll('', '').replace('(', '').replace(')', '').replace('-', '')
+  })
+  .then(response => {
+    console.log(response.data);
+  })
+  .catch(error => {
+  if (error.response) {
+    console.log(error.response.data)
+  } else {
+    console.log(error.message) // network error
+  }
+})
 }
 
 </script>
@@ -27,7 +38,7 @@ const handleLogin =() =>{
               placeholder="+251 91 234 5678"
               class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm"
               v-maska data-maska="+251 ## ### ####"
-              v-model="data.phone"
+              v-model="credentials.phone"
             />
           </div>
 
