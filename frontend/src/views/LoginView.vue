@@ -1,5 +1,6 @@
 <script setup>
 
+
 </script>
 
 <template>
@@ -14,8 +15,9 @@
               type="text"
               name="phone"
               id="phone"
-              placeholder="+251 (234) 567 891"
+              placeholder="+251 91 234 5678"
               class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm"
+              v-maska data-maska="+251 ## ### ####"
             />
           </div>
 
