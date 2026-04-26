@@ -6,8 +6,9 @@ const credentials = reactive({
   phone: null
 });
 const handleLogin =() =>{
+  const formattedPhone = credentials.phone.replace(/[^0-9]/g, '').replace(/^251/, '0');
   axios.post('http://127.0.0.1:8000/api/login', {
-    phone: credentials.phone.replaceAll('', '').replace('(', '').replace(')', '').replace('-', '')
+    phone: formattedPhone
   })
   .then(response => {
     console.log(response.data);
