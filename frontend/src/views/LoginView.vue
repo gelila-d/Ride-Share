@@ -1,10 +1,14 @@
 <script setup>
 import { reactive} from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 const credentials = reactive({
   phone: null
 });
+
+const router = useRouter();
+
 const handleLogin =() =>{
   const phoneVal = credentials.phone || '';
   const formattedPhone = phoneVal.replace(/[^0-9]/g, '').replace(/^251/, '0');
@@ -13,7 +17,10 @@ const handleLogin =() =>{
   })
   .then(response => {
     console.log(response.data);
-    // After login success, we might want to tell the user to check their phone or navigate
+    router.push({
+      name: 'login.verify',
+      query: { phone: formattedPhone }
+    });
   })
   .catch(error => {
   if (error.response) {
