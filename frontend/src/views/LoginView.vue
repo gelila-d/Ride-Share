@@ -46,7 +46,7 @@ const handleLogin =() =>{
           </div>
 
           <div class="bg-gray-50 px-4 py-3 text-right sm:px-6">
-            <button @submit="handleLogin"
+            <button
               type="submit"
               class="inline-flex justify-center rounded-md border border-transparent bg-black py-2 px-4 text-white"
             >
