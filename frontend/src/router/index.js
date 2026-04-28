@@ -20,22 +20,25 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
+  if (to.name === 'login') {
+    return true
+  } 
   if(!localStorage.getItem('token')){
     return{
       name: 'login'
     }
   }
-
+ checkTokenAuthenticity();
  
 }
 )
 
- checkTokenAuthenticity();
+
  
 
 const checkTokenAuthenticity = () => {
-  axios.get('http://localhost:3000/api/user',{
+  axios.get('http://127.0.0.1:8000/api/user',{
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`
     }

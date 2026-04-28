@@ -45,7 +45,7 @@ const handleLogin =() =>{
 }
 
 const handleVerification =() =>{
-  axios.post('http://127.0.0.1:8000/api/verify', 
+  axios.post('http://127.0.0.1:8000/api/login/verify', 
    formattedCredentials.value
   )
   .then(response => {

@@ -11,6 +11,9 @@ Route::post('/login',[LoginController::class,'submit']);
 Route::post('/login/verify', [LoginController::class,'verify']);
 
 Route::group(['middleware' => 'auth:sanctum'], function(){
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
     Route::get('/driver', [DriverController::class,'show']);
     Route::post('/driver', [DriverController::class,'update']);
 
