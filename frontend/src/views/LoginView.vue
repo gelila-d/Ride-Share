@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref} from 'vue';
+import { onMounted, reactive, ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 
@@ -22,13 +22,13 @@ onMounted(() => {
 
 const formattedCredentials = computed(() => {
   return {
-    phone: credentials.phone.replace(/[^0-9]/g, '').replace(/^251/, '0'),
+    phone: credentials.phone ? credentials.phone.replace(/[^0-9]/g, '').replace(/^251/, '0') : null,
     login_code: credentials.login_code
   }
 })
 const handleLogin =() =>{
   axios.post('http://127.0.0.1:8000/api/login', 
-     formattedCredentials
+     formattedCredentials.value
   )
   .then(response => {
     console.log(response.data);
@@ -46,7 +46,7 @@ const handleLogin =() =>{
 
 const handleVerification =() =>{
   axios.post('http://127.0.0.1:8000/api/verify', 
-   formattedCredentials
+   formattedCredentials.value
   )
   .then(response => {
     console.log(response.data);
