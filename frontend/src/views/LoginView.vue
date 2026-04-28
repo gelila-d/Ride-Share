@@ -1,6 +1,9 @@
 <script setup>
-import { reactive, ref} from 'vue';
+import { onMounted, reactive, ref} from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
+
+const router= useRouter();
 
 const credentials = reactive({
   phone: null,
@@ -8,14 +11,29 @@ const credentials = reactive({
 });
 
 const waitingOnVerification = ref(false);
+
+onMounted(() => {
+  if (localStorage.getItem('token')) {
+    router.push({
+      name:'index'
+    })
+  }
+});
+
+const formattedCredentials = computed(() => {
+  return {
+    phone: credentials.phone.replace(/[^0-9]/g, '').replace(/^251/, '0'),
+    login_code: credentials.login_code
+  }
+})
 const handleLogin =() =>{
-  const formattedPhone = credentials.phone.replace(/[^0-9]/g, '').replace(/^251/, '0');
-  axios.post('http://127.0.0.1:8000/api/login', {
-    phone: formattedPhone
-  })
+  axios.post('http://127.0.0.1:8000/api/login', 
+     formattedCredentials
+  )
   .then(response => {
     console.log(response.data);
     waitingOnVerification.value = true
+
   })
   .catch(error => {
   if (error.response) {
@@ -27,12 +45,15 @@ const handleLogin =() =>{
 }
 
 const handleVerification =() =>{
-  axios.post('http://127.0.0.1:8000/api/verify', {
-    phone: credentials.phone.replace(/[^0-9]/g, '').replace(/^251/, '0'),
-    login_code: credentials.login_code
-  })
+  axios.post('http://127.0.0.1:8000/api/verify', 
+   formattedCredentials
+  )
   .then(response => {
     console.log(response.data);
+    localStorage.setItem('token', response.data.token);
+    router.push({
+      name:'index'
+    })
   })
   .catch(error => {
     if (error.response) {
