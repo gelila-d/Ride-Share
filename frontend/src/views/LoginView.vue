@@ -15,7 +15,7 @@ const waitingOnVerification = ref(false);
 onMounted(() => {
   if (localStorage.getItem('token')) {
     router.push({
-      name:'index'
+      name:'landing'
     })
   }
 });
@@ -52,7 +52,7 @@ const handleVerification =() =>{
     console.log(response.data);
     localStorage.setItem('token', response.data.token);
     router.push({
-      name:'index'
+      name:'landing'
     })
   })
   .catch(error => {
