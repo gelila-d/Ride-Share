@@ -1,14 +1,16 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { GoogleMap } from 'vue3-google-map'
+import { useLocationStore } from '@/stores/location'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const mapCenter = { lat: 9.0054, lng: 38.7636 } // Default to Addis Ababa, Ethiopia
 const mapRef = ref(null)
-const destinationInput = ref('')
+
+const locationStore = useLocationStore()
+
 const searchResults = ref([])
 const isSearching = ref(false)
-const selectedDestination = ref(null)
 
 let directionsService = null
 let directionsRenderer = null
@@ -23,11 +25,13 @@ watch(() => mapRef.value?.ready, (ready) => {
 })
 
 const handleInput = () => {
-    selectedDestination.value = null // clear selection if user types
+    // clear selection if user types
+    locationStore.destination.geometry.lat = null
+    locationStore.destination.geometry.lng = null
     
     if (searchTimeout) clearTimeout(searchTimeout)
     
-    if (!destinationInput.value.trim()) {
+    if (!locationStore.destination.name.trim()) {
         searchResults.value = []
         return
     }
@@ -36,7 +40,7 @@ const handleInput = () => {
         isSearching.value = true
         try {
             // Biased towards Addis Ababa
-            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput.value)}&lat=9.0054&lon=38.7636&limit=5`)
+            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(locationStore.destination.name)}&lat=9.0054&lon=38.7636&limit=5`)
             const data = await res.json()
             searchResults.value = data.features || []
         } catch (error) {
@@ -56,11 +60,11 @@ const selectLocation = (feature) => {
         name += ', ' + props.state
     }
     
-    destinationInput.value = name
-    selectedDestination.value = {
-        lat: feature.geometry.coordinates[1],
-        lng: feature.geometry.coordinates[0]
-    }
+    locationStore.destination.name = name
+    locationStore.destination.address = props.city || props.state || ''
+    locationStore.destination.geometry.lat = feature.geometry.coordinates[1]
+    locationStore.destination.geometry.lng = feature.geometry.coordinates[0]
+    
     searchResults.value = []
 }
 
@@ -71,11 +75,14 @@ const handleBlur = () => {
 }
 
 const calculateRoute = () => {
-    if (!destinationInput.value || !directionsService || !directionsRenderer) {
+    if (!locationStore.destination.name || !directionsService || !directionsRenderer) {
         return;
     }
 
-    const dest = selectedDestination.value ? selectedDestination.value : (destinationInput.value + ', Ethiopia');
+    const hasGeometry = locationStore.destination.geometry.lat && locationStore.destination.geometry.lng
+    const dest = hasGeometry 
+        ? { lat: locationStore.destination.geometry.lat, lng: locationStore.destination.geometry.lng } 
+        : (locationStore.destination.name + ', Ethiopia');
 
     directionsService.route(
         {
@@ -103,7 +110,7 @@ const calculateRoute = () => {
                 <div class="bg-white px-4 py-5 sm:p-6">
                     <div class="relative">
                         <input type="text" placeholder="My destination"
-                            v-model="destinationInput"
+                            v-model="locationStore.destination.name"
                             @input="handleInput"
                             @blur="handleBlur"
                             class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-black focus:ring-black">
