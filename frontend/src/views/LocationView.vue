@@ -1,48 +1,134 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { GoogleMap } from 'vue3-google-map'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-const mapCenter = { lat: 40.7128, lng: -74.0060 } // Default to New York
+const mapCenter = { lat: 9.0054, lng: 38.7636 } // Default to Addis Ababa, Ethiopia
 const mapRef = ref(null)
-const destinationInput = ref(null)
-let autocomplete = null
+const destinationInput = ref('')
+const searchResults = ref([])
+const isSearching = ref(false)
+const selectedDestination = ref(null)
 
-const handleMapReady = () => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-        autocomplete = new window.google.maps.places.Autocomplete(destinationInput.value, {
-            fields: ['geometry', 'name', 'formatted_address']
-        })
+let directionsService = null
+let directionsRenderer = null
+let searchTimeout = null
 
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace()
-            if (place.geometry && place.geometry.location) {
-                // Update map center to the selected place
-                if (mapRef.value && mapRef.value.map) {
-                    mapRef.value.map.panTo(place.geometry.location)
-                    mapRef.value.map.setZoom(15)
-                }
-            }
-        })
+watch(() => mapRef.value?.ready, (ready) => {
+    if (ready && window.google && window.google.maps && !directionsService) {
+        directionsService = new window.google.maps.DirectionsService();
+        directionsRenderer = new window.google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(mapRef.value.map);
     }
+})
+
+const handleInput = () => {
+    selectedDestination.value = null // clear selection if user types
+    
+    if (searchTimeout) clearTimeout(searchTimeout)
+    
+    if (!destinationInput.value.trim()) {
+        searchResults.value = []
+        return
+    }
+
+    searchTimeout = setTimeout(async () => {
+        isSearching.value = true
+        try {
+            // Biased towards Addis Ababa
+            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput.value)}&lat=9.0054&lon=38.7636&limit=5`)
+            const data = await res.json()
+            searchResults.value = data.features || []
+        } catch (error) {
+            console.error('Error fetching autocomplete:', error)
+        } finally {
+            isSearching.value = false
+        }
+    }, 300)
 }
+
+const selectLocation = (feature) => {
+    const props = feature.properties
+    let name = props.name
+    if (props.city && props.city !== props.name) {
+        name += ', ' + props.city
+    } else if (props.state && props.state !== props.name) {
+        name += ', ' + props.state
+    }
+    
+    destinationInput.value = name
+    selectedDestination.value = {
+        lat: feature.geometry.coordinates[1],
+        lng: feature.geometry.coordinates[0]
+    }
+    searchResults.value = []
+}
+
+const handleBlur = () => {
+    setTimeout(() => {
+        searchResults.value = []
+    }, 200)
+}
+
+const calculateRoute = () => {
+    if (!destinationInput.value || !directionsService || !directionsRenderer) {
+        return;
+    }
+
+    const dest = selectedDestination.value ? selectedDestination.value : (destinationInput.value + ', Ethiopia');
+
+    directionsService.route(
+        {
+            origin: mapCenter,
+            destination: dest,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (response, status) => {
+            if (status === 'OK') {
+                directionsRenderer.setDirections(response);
+            } else {
+                alert('Directions request failed due to ' + status);
+            }
+        }
+    );
+};
+
 </script>
 
 <template>
     <div class="pt-16">
         <h1 class="text-3xl font-semibold mb-4">Where are we going?</h1>
-        <form action="#" @submit.prevent>
+        <form action="#" @submit.prevent="calculateRoute">
             <div class="overflow-hidden shadow sm:rounded-md max-w-sm mx-auto text-left mb-6">
                 <div class="bg-white px-4 py-5 sm:p-6">
-                    <div>
+                    <div class="relative">
                         <input type="text" placeholder="My destination"
-                            ref="destinationInput"
+                            v-model="destinationInput"
+                            @input="handleInput"
+                            @blur="handleBlur"
                             class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-black focus:ring-black">
+                        
+                        <!-- Photon Autocomplete Dropdown -->
+                        <div v-if="searchResults.length > 0" class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
+                            <ul class="max-h-60 overflow-auto py-1">
+                                <li v-for="(result, index) in searchResults" :key="index"
+                                    @click="selectLocation(result)"
+                                    class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm">
+                                    <div class="font-medium text-gray-900">{{ result.properties.name }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ result.properties.city || result.properties.state || '' }}
+                                        <template v-if="result.properties.country">
+                                            {{ (result.properties.city || result.properties.state) ? ', ' : '' }}{{ result.properties.country }}
+                                        </template>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 text-right sm:px-6">
                     <button
-                        type="button"
+                        type="submit"
                         class="inline-flex justify-center rounded-md border border-transparent bg-black py-2 px-4 text-white hover:bg-gray-800 transition-colors">
                         Find A Ride
                     </button>
@@ -54,11 +140,9 @@ const handleMapReady = () => {
             <GoogleMap 
                 ref="mapRef"
                 :api-key="apiKey" 
-                :libraries="['places']"
                 style="width: 100%; height: 400px" 
                 :center="mapCenter" 
                 :zoom="11"
-                @ready="handleMapReady"
             >
             </GoogleMap>
         </div>
