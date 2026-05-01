@@ -2,36 +2,33 @@
 import { ref, watch } from 'vue'
 import { GoogleMap } from 'vue3-google-map'
 import { useLocationStore } from '@/stores/location'
+import { useRouter } from 'vue-router'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const mapCenter = { lat: 9.0054, lng: 38.7636 } // Default to Addis Ababa, Ethiopia
 const mapRef = ref(null)
 
 const locationStore = useLocationStore()
+const router = useRouter()
 
+// Use a local ref for the input to guarantee reactivity
+const destinationInput = ref(locationStore.destination.name || '')
 const searchResults = ref([])
 const isSearching = ref(false)
 
-let directionsService = null
-let directionsRenderer = null
 let searchTimeout = null
 
-watch(() => mapRef.value?.ready, (ready) => {
-    if (ready && window.google && window.google.maps && !directionsService) {
-        directionsService = new window.google.maps.DirectionsService();
-        directionsRenderer = new window.google.maps.DirectionsRenderer();
-        directionsRenderer.setMap(mapRef.value.map);
-    }
-})
-
 const handleInput = () => {
+    // Sync to store
+    locationStore.destination.name = destinationInput.value
+    
     // clear selection if user types
     locationStore.destination.geometry.lat = null
     locationStore.destination.geometry.lng = null
     
     if (searchTimeout) clearTimeout(searchTimeout)
     
-    if (!locationStore.destination.name.trim()) {
+    if (!destinationInput.value.trim()) {
         searchResults.value = []
         return
     }
@@ -40,7 +37,7 @@ const handleInput = () => {
         isSearching.value = true
         try {
             // Biased towards Addis Ababa
-            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(locationStore.destination.name)}&lat=9.0054&lon=38.7636&limit=5`)
+            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput.value)}&lat=9.0054&lon=38.7636&limit=5`)
             const data = await res.json()
             searchResults.value = data.features || []
         } catch (error) {
@@ -60,6 +57,8 @@ const selectLocation = (feature) => {
         name += ', ' + props.state
     }
     
+    // Explicitly update both the input and the store
+    destinationInput.value = name
     locationStore.destination.name = name
     locationStore.destination.address = props.city || props.state || ''
     locationStore.destination.geometry.lat = feature.geometry.coordinates[1]
@@ -69,48 +68,31 @@ const selectLocation = (feature) => {
 }
 
 const handleBlur = () => {
+    // Give it more time so click/touch events can register properly
     setTimeout(() => {
         searchResults.value = []
-    }, 200)
+    }, 300)
 }
 
-const calculateRoute = () => {
-    if (!locationStore.destination.name || !directionsService || !directionsRenderer) {
-        return;
+const handleGoToMap = () => {
+    if (destinationInput.value) {
+        // Fallback sync
+        locationStore.destination.name = destinationInput.value
+        router.push({ name: 'map' })
     }
-
-    const hasGeometry = locationStore.destination.geometry.lat && locationStore.destination.geometry.lng
-    const dest = hasGeometry 
-        ? { lat: locationStore.destination.geometry.lat, lng: locationStore.destination.geometry.lng } 
-        : (locationStore.destination.name + ', Ethiopia');
-
-    directionsService.route(
-        {
-            origin: mapCenter,
-            destination: dest,
-            travelMode: window.google.maps.TravelMode.DRIVING,
-        },
-        (response, status) => {
-            if (status === 'OK') {
-                directionsRenderer.setDirections(response);
-            } else {
-                alert('Directions request failed due to ' + status);
-            }
-        }
-    );
-};
+}
 
 </script>
 
 <template>
     <div class="pt-16">
         <h1 class="text-3xl font-semibold mb-4">Where are we going?</h1>
-        <form action="#" @submit.prevent="calculateRoute">
+        <form action="#" @submit.prevent="handleGoToMap">
             <div class="overflow-hidden shadow sm:rounded-md max-w-sm mx-auto text-left mb-6">
                 <div class="bg-white px-4 py-5 sm:p-6">
                     <div class="relative">
                         <input type="text" placeholder="My destination"
-                            v-model="locationStore.destination.name"
+                            v-model="destinationInput"
                             @input="handleInput"
                             @blur="handleBlur"
                             class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-black focus:ring-black">
@@ -120,6 +102,7 @@ const calculateRoute = () => {
                             <ul class="max-h-60 overflow-auto py-1">
                                 <li v-for="(result, index) in searchResults" :key="index"
                                     @click="selectLocation(result)"
+                                    @mousedown.prevent="selectLocation(result)"
                                     class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm">
                                     <div class="font-medium text-gray-900">{{ result.properties.name }}</div>
                                     <div class="text-xs text-gray-500">

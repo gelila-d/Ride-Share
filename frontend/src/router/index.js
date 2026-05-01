@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
-import LandingView from '@/views/LandingView.vue' 
+import LandingView from '@/views/LandingView.vue'
 import LocationView from '@/views/LocationView.vue'
+import MapView from '@/views/MapView.vue'
 import axios from 'axios'
 
 const router = createRouter({
@@ -13,7 +14,7 @@ const router = createRouter({
       component: LoginView,
     },
     {
-       path: '/landing',
+      path: '/landing',
       name: 'landing',
       component: LandingView,
     },
@@ -21,31 +22,36 @@ const router = createRouter({
       path: '/location',
       name: 'location',
       component: LocationView,
+    },
+    {
+      path: '/map',
+      name: 'map',
+      component: MapView,
     }
 
-    
+
   ],
 })
 
 router.beforeEach((to, from) => {
   if (to.name === 'login') {
     return true
-  } 
-  if(!localStorage.getItem('token')){
-    return{
+  }
+  if (!localStorage.getItem('token')) {
+    return {
       name: 'login'
     }
   }
- checkTokenAuthenticity();
- 
+  checkTokenAuthenticity();
+
 }
 )
 
 
- 
+
 
 const checkTokenAuthenticity = () => {
-  axios.get('http://127.0.0.1:8000/api/user',{
+  axios.get('http://127.0.0.1:8000/api/user', {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`
     }
@@ -53,9 +59,9 @@ const checkTokenAuthenticity = () => {
 
   })
 
-  .catch(error => {
-    localStorage.removeItem('token')
-    router.push({name: 'login'})
-  })
+    .catch(error => {
+      localStorage.removeItem('token')
+      router.push({ name: 'login' })
+    })
 }
 export default router
