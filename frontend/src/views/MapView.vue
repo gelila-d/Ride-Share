@@ -45,6 +45,7 @@ const mapCenter = computed(() => {
         </div>
         <div class="bg-gray-50 px-4 py-3 text-right sm:px-6">
           <button
+            @click="router.push({ name: 'trip' })"
             class="inline-flex w-32 justify-center rounded-md border border-transparent bg-black text-white py-2 hover:bg-gray-800 transition-colors"
           >
             Let's Go!

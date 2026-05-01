@@ -3,7 +3,9 @@ import LoginView from '@/views/LoginView.vue'
 import LandingView from '@/views/LandingView.vue'
 import LocationView from '@/views/LocationView.vue'
 import MapView from '@/views/MapView.vue'
+import TripView from '@/views/TripView.vue'
 import axios from 'axios'
+import { useLocationStore } from '@/stores/location'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,9 +29,12 @@ const router = createRouter({
       path: '/map',
       name: 'map',
       component: MapView,
+    },
+    {
+      path: '/trip',
+      name: 'trip',
+      component: TripView,
     }
-
-
   ],
 })
 
@@ -42,6 +47,14 @@ router.beforeEach((to, from) => {
       name: 'login'
     }
   }
+
+  if (to.name === 'map') {
+    const locationStore = useLocationStore()
+    if (!locationStore.destination.geometry.lat || !locationStore.destination.geometry.lng) {
+      return { name: 'location' }
+    }
+  }
+
   checkTokenAuthenticity();
 
 }
