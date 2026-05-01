@@ -1,15 +1,25 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { GoogleMap } from 'vue3-google-map'
 import { useLocationStore } from '@/stores/location'
 import { useRouter } from 'vue-router'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-const mapCenter = { lat: 9.0054, lng: 38.7636 } // Default to Addis Ababa, Ethiopia
 const mapRef = ref(null)
 
 const locationStore = useLocationStore()
 const router = useRouter()
+
+onMounted(async () => {
+    await locationStore.updateCurrentLocation()
+})
+
+const mapCenter = computed(() => {
+    if (locationStore.current.geometry.lat && locationStore.current.geometry.lng) {
+        return { lat: locationStore.current.geometry.lat, lng: locationStore.current.geometry.lng }
+    }
+    return { lat: 9.0054, lng: 38.7636 } // Fallback to Addis Ababa
+})
 
 // Use a local ref for the input to guarantee reactivity
 const destinationInput = ref(locationStore.destination.name || '')

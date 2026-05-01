@@ -7,11 +7,20 @@ const locationStore = useLocationStore()
 const router = useRouter()
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-// Fallback center to Addis Ababa if no geometry was set
-const mapCenter = (locationStore.destination.geometry.lat && locationStore.destination.geometry.lng)
-    ? { lat: locationStore.destination.geometry.lat, lng: locationStore.destination.geometry.lng }
-    : { lat: 9.0054, lng: 38.7636 }
+import { onMounted, computed } from 'vue'
 
+onMounted(async () => {
+    await locationStore.updateCurrentLocation()
+})
+
+const mapCenter = computed(() => {
+    if (locationStore.destination.geometry.lat && locationStore.destination.geometry.lng) {
+        return { lat: locationStore.destination.geometry.lat, lng: locationStore.destination.geometry.lng }
+    } else if (locationStore.current.geometry.lat && locationStore.current.geometry.lng) {
+        return { lat: locationStore.current.geometry.lat, lng: locationStore.current.geometry.lng }
+    }
+    return { lat: 9.0054, lng: 38.7636 } // Fallback to Addis Ababa
+})
 </script>
 
 <template>
