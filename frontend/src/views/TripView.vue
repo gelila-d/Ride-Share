@@ -10,13 +10,11 @@ const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 const driverAccepted = ref(false)
 
-// Mock driver info (replace with real data from backend later)
 const driver = ref({
-    name: '',
-    car: '',
-    plate: '',
-    rating: 0,
-    photo: ''
+    name: 'Abebe Kebede',
+    car: 'Toyota Yaris · White',
+    plate: 'AA-3-12345',
+    rating: 4.8
 })
 
 onMounted(async () => {
@@ -46,7 +44,6 @@ const destinationPosition = computed(() => {
     return null
 })
 
-// Estimate distance (in km) between current location and destination using Haversine formula
 const estimatedDistance = computed(() => {
     if (!currentPosition.value || !destinationPosition.value) return null
     const R = 6371
@@ -59,7 +56,6 @@ const estimatedDistance = computed(() => {
     return (R * c).toFixed(1)
 })
 
-// Estimate time (assuming average 30 km/h in city traffic)
 const estimatedTime = computed(() => {
     if (!estimatedDistance.value) return null
     const minutes = Math.round((estimatedDistance.value / 30) * 60)
@@ -67,7 +63,6 @@ const estimatedTime = computed(() => {
     return `${minutes} min`
 })
 
-// Estimate price (using a simple rate: base 50 ETB + 15 ETB/km)
 const estimatedPrice = computed(() => {
     if (!estimatedDistance.value) return null
     const price = 50 + (estimatedDistance.value * 15)
@@ -80,117 +75,128 @@ const handleCancelTrip = () => {
 </script>
 
 <template>
-  <div class="pt-16">
-    <h1 class="text-3xl font-semibold mb-4 text-center">
+  <div class="pt-16 pb-8">
+    <!-- Header -->
+    <h1 class="text-3xl font-semibold mb-6 text-center">
       {{ driverAccepted ? 'Driver is on the way!' : 'Waiting on a driver...' }}
     </h1>
-    <div class="overflow-hidden shadow sm:rounded-md max-w-sm mx-auto text-left">
-      <!-- Map section -->
-      <div class="bg-white px-4 py-5 sm:p-6">
-        <div>
-          <GoogleMap 
-              :api-key="apiKey"
-              :zoom="13"
-              :center="mapCenter"
-              style="width: 100%; height: 256px"
-          >
-              <!-- Current location marker (blue) -->
-              <Marker 
-                  v-if="currentPosition" 
-                  :options="{ 
-                      position: currentPosition,
-                      icon: {
-                          path: 0,
-                          scale: 8,
-                          fillColor: '#4285F4',
-                          fillOpacity: 1,
-                          strokeColor: '#ffffff',
-                          strokeWeight: 2
-                      },
-                      title: 'Your location'
-                  }" 
-              />
-              <!-- Destination marker (red) -->
-              <Marker 
-                  v-if="destinationPosition" 
-                  :options="{ 
-                      position: destinationPosition,
-                      title: locationStore.destination.name || 'Destination'
-                  }" 
-              />
-          </GoogleMap>
+
+    <div class="max-w-sm mx-auto space-y-4 px-4">
+
+      <!-- Map Card -->
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+        <GoogleMap
+            :api-key="apiKey"
+            :zoom="13"
+            :center="mapCenter"
+            style="width: 100%; height: 220px"
+        >
+            <Marker
+                v-if="currentPosition"
+                :options="{
+                    position: currentPosition,
+                    icon: {
+                        path: 0,
+                        scale: 8,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2
+                    },
+                    title: 'Your location'
+                }"
+            />
+            <Marker
+                v-if="destinationPosition"
+                :options="{
+                    position: destinationPosition,
+                    title: locationStore.destination.name || 'Destination'
+                }"
+            />
+        </GoogleMap>
+      </div>
+
+      <!-- Trip Info Card -->
+      <div class="bg-white rounded-xl shadow p-5">
+        <!-- From / To -->
+        <div class="space-y-3">
+          <div class="flex items-start space-x-3">
+            <div class="mt-1 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-100 flex-shrink-0"></div>
+            <div>
+              <p class="text-xs text-gray-400 uppercase tracking-wide">Pickup</p>
+              <p class="text-sm font-medium text-gray-800">Current Location</p>
+            </div>
+          </div>
+          <div class="ml-1.5 border-l-2 border-dashed border-gray-200 h-4"></div>
+          <div class="flex items-start space-x-3">
+            <div class="mt-1 w-3 h-3 rounded-full bg-black ring-4 ring-gray-200 flex-shrink-0"></div>
+            <div>
+              <p class="text-xs text-gray-400 uppercase tracking-wide">Destination</p>
+              <p class="text-sm font-medium text-gray-800">{{ locationStore.destination.name || 'Unknown' }}</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Trip details -->
-        <div class="mt-4 space-y-2">
-          <p class="text-lg">Going to <strong class="text-black">{{ locationStore.destination.name || 'Unknown Destination' }}</strong></p>
-          
-          <div v-if="estimatedDistance" class="flex justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
-            <div class="flex items-center space-x-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-              <span>{{ estimatedDistance }} km</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>~{{ estimatedTime }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-              </svg>
-              <span>{{ estimatedPrice }} ETB</span>
-            </div>
+        <!-- Stats Row -->
+        <div v-if="estimatedDistance" class="mt-5 pt-4 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p class="text-lg font-bold text-gray-900">{{ estimatedDistance }}<span class="text-xs font-normal text-gray-400"> km</span></p>
+            <p class="text-xs text-gray-400">Distance</p>
+          </div>
+          <div class="border-l border-r border-gray-100">
+            <p class="text-lg font-bold text-gray-900">{{ estimatedTime }}</p>
+            <p class="text-xs text-gray-400">Est. Time</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold text-gray-900">{{ estimatedPrice }}<span class="text-xs font-normal text-gray-400"> ETB</span></p>
+            <p class="text-xs text-gray-400">Est. Price</p>
           </div>
         </div>
       </div>
 
-      <!-- Driver info (shown when driver accepts) -->
-      <div v-if="driverAccepted" class="bg-white px-4 py-4 sm:px-6 border-t border-gray-200">
+      <!-- Driver Card (when accepted) -->
+      <div v-if="driverAccepted" class="bg-white rounded-xl shadow p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-3">Your Driver</p>
         <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center">
+            <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <div class="flex-1">
-            <p class="font-semibold text-gray-900">{{ driver.name }}</p>
-            <p class="text-sm text-gray-500">{{ driver.car }} · {{ driver.plate }}</p>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-900 truncate">{{ driver.name }}</p>
+            <p class="text-sm text-gray-500 truncate">{{ driver.car }}</p>
+            <p class="text-xs text-gray-400">{{ driver.plate }}</p>
           </div>
-          <div class="text-right">
-            <div class="flex items-center space-x-1 text-yellow-500">
-              <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              <span class="text-sm font-medium text-gray-700">{{ driver.rating }}</span>
-            </div>
+          <div class="flex items-center space-x-1 bg-yellow-50 px-2 py-1 rounded-lg">
+            <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <span class="text-sm font-semibold text-gray-700">{{ driver.rating }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Waiting for driver (shown while searching) -->
-      <div v-else class="bg-gray-50 px-4 py-4 sm:px-6 text-center border-t border-gray-100">
-        <div class="flex items-center justify-center space-x-2 text-gray-600">
-          <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-          <span class="text-sm font-medium">Looking for a nearby driver...</span>
+      <!-- Searching Indicator (when waiting) -->
+      <div v-else class="bg-white rounded-xl shadow p-5">
+        <div class="flex items-center space-x-3">
+          <div class="relative">
+            <div class="w-10 h-10 rounded-full border-2 border-gray-200 border-t-black animate-spin"></div>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-800">Looking for a nearby driver</p>
+            <p class="text-xs text-gray-400">This usually takes a few seconds...</p>
+          </div>
         </div>
       </div>
 
-      <!-- Cancel button -->
-      <div class="bg-white px-4 py-3 sm:px-6 text-center border-t border-gray-200">
-        <button
-            @click="handleCancelTrip"
-            class="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-6 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
-        >
-          Cancel Trip
-        </button>
-      </div>
+      <!-- Cancel Button -->
+      <button
+          @click="handleCancelTrip"
+          class="w-full py-3 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 bg-white shadow hover:bg-gray-50 transition-colors"
+      >
+        Cancel Trip
+      </button>
     </div>
   </div>
 </template>
