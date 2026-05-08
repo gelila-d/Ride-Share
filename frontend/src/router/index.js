@@ -4,6 +4,8 @@ import LandingView from '@/views/LandingView.vue'
 import LocationView from '@/views/LocationView.vue'
 import MapView from '@/views/MapView.vue'
 import TripView from '@/views/TripView.vue'
+import DriverView from '@/views/DriverView.vue'
+import StandbyView from '@/views/StandbyView.vue'
 import axios from 'axios'
 import { useLocationStore } from '@/stores/location'
 
@@ -34,7 +36,18 @@ const router = createRouter({
       path: '/trip',
       name: 'trip',
       component: TripView,
+    },
+    {
+      path: '/driver',
+      name: 'driver',
+      component: DriverView,
+    },
+    {
+      path: '/standby',
+      name: 'standby',
+      component: StandbyView,
     }
+
   ],
 })
 
