@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { GoogleMap } from 'vue3-google-map'
+import { GoogleMap, Marker, Polyline } from 'vue3-google-map'
 import { useLocationStore } from '@/stores/location'
 import { useRouter } from 'vue-router'
 
@@ -19,6 +19,20 @@ const mapCenter = computed(() => {
         return { lat: locationStore.current.geometry.lat, lng: locationStore.current.geometry.lng }
     }
     return { lat: 9.0054, lng: 38.7636 } // Fallback to Addis Ababa
+})
+
+const currentPosition = computed(() => {
+    if (locationStore.current.geometry.lat && locationStore.current.geometry.lng) {
+        return { lat: locationStore.current.geometry.lat, lng: locationStore.current.geometry.lng }
+    }
+    return null
+})
+
+const destinationPosition = computed(() => {
+    if (locationStore.destination.geometry.lat && locationStore.destination.geometry.lng) {
+        return { lat: locationStore.destination.geometry.lat, lng: locationStore.destination.geometry.lng }
+    }
+    return null
 })
 
 // Use a local ref for the input to guarantee reactivity
@@ -144,6 +158,18 @@ const handleGoToMap = () => {
                 :center="mapCenter" 
                 :zoom="11"
             >
+                <Marker v-if="currentPosition" :options="{ position: currentPosition, title: 'Current Location' }" />
+                <Marker v-if="destinationPosition" :options="{ position: destinationPosition, title: 'Destination' }" />
+                <Polyline
+                    v-if="currentPosition && destinationPosition"
+                    :options="{
+                        path: [currentPosition, destinationPosition],
+                        geodesic: true,
+                        strokeColor: '#3B82F6',
+                        strokeOpacity: 0.8,
+                        strokeWeight: 4,
+                    }"
+                />
             </GoogleMap>
         </div>
     </div>

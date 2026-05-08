@@ -1,7 +1,7 @@
 <script setup>
 import { useLocationStore } from '@/stores/location'
 import { useRouter } from 'vue-router'
-import { GoogleMap, Marker } from 'vue3-google-map';
+import { GoogleMap, Marker, Polyline } from 'vue3-google-map';
 
 const locationStore = useLocationStore()
 const router = useRouter()
@@ -21,6 +21,20 @@ const mapCenter = computed(() => {
     }
     return { lat: 9.0054, lng: 38.7636 } // Fallback to Addis Ababa
 })
+
+const currentPosition = computed(() => {
+    if (locationStore.current.geometry.lat && locationStore.current.geometry.lng) {
+        return { lat: locationStore.current.geometry.lat, lng: locationStore.current.geometry.lng }
+    }
+    return null
+})
+
+const destinationPosition = computed(() => {
+    if (locationStore.destination.geometry.lat && locationStore.destination.geometry.lng) {
+        return { lat: locationStore.destination.geometry.lat, lng: locationStore.destination.geometry.lng }
+    }
+    return null
+})
 </script>
 
 <template>
@@ -36,7 +50,18 @@ const mapCenter = computed(() => {
                     :center="mapCenter"
                     style="width: 100%; height: 256px"
                 >
-                    <Marker v-if="locationStore.destination.geometry.lat" :options="{ position: mapCenter }" />
+                    <Marker v-if="currentPosition" :options="{ position: currentPosition, title: 'Current Location' }" />
+                    <Marker v-if="destinationPosition" :options="{ position: destinationPosition, title: 'Destination' }" />
+                    <Polyline
+                        v-if="currentPosition && destinationPosition"
+                        :options="{
+                            path: [currentPosition, destinationPosition],
+                            geodesic: true,
+                            strokeColor: '#3B82F6',
+                            strokeOpacity: 0.8,
+                            strokeWeight: 4,
+                        }"
+                    />
                 </GoogleMap>
             </div>
           <div class="mt-4">

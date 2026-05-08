@@ -1,7 +1,7 @@
 <script setup>
 import { useLocationStore } from '@/stores/location'
 import { useRouter } from 'vue-router'
-import { GoogleMap, Marker } from 'vue3-google-map'
+import { GoogleMap, Marker, Polyline } from 'vue3-google-map'
 import { onMounted, computed, ref } from 'vue'
 
 const locationStore = useLocationStore()
@@ -101,6 +101,16 @@ const handleCancelTrip = () => {
                 :options="{
                     position: destinationPosition,
                     title: locationStore.destination?.name || 'Destination'
+                }"
+            />
+            <Polyline
+                v-if="currentPosition && destinationPosition"
+                :options="{
+                    path: [currentPosition, destinationPosition],
+                    geodesic: true,
+                    strokeColor: '#3B82F6',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 4,
                 }"
             />
         </GoogleMap>
