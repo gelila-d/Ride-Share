@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, reactive, ref, computed } from 'vue';
-import axios from 'axios';
+import http from '@/helpers/http';
 import { useRouter } from 'vue-router';
 
 const router= useRouter();
@@ -27,7 +27,7 @@ const formattedCredentials = computed(() => {
   }
 })
 const handleLogin =() =>{
-  axios.post('http://127.0.0.1:8000/api/login', 
+  http().post('/api/login', 
      formattedCredentials.value
   )
   .then(response => {
@@ -45,7 +45,7 @@ const handleLogin =() =>{
 }
 
 const handleVerification =() =>{
-  axios.post('http://127.0.0.1:8000/api/login/verify', 
+  http().post('/api/login/verify', 
    formattedCredentials.value
   )
   .then(response => {

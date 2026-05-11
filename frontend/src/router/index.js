@@ -6,7 +6,7 @@ import MapView from '@/views/MapView.vue'
 import TripView from '@/views/TripView.vue'
 import DriverView from '@/views/DriverView.vue'
 import StandbyView from '@/views/StandbyView.vue'
-import axios from 'axios'
+import http from '@/helpers/http'
 import { useLocationStore } from '@/stores/location'
 
 const router = createRouter({
@@ -77,14 +77,10 @@ router.beforeEach((to, from) => {
 
 
 const checkTokenAuthenticity = () => {
-  axios.get('http://127.0.0.1:8000/api/user', {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  }).then(response => {
-
-  })
-
+  http().get('/api/user')
+    .then(response => {
+      // Token is valid
+    })
     .catch(error => {
       localStorage.removeItem('token')
       router.push({ name: 'login' })

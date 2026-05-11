@@ -1,5 +1,30 @@
 <script setup>
+import { reactive } from 'vue'
+import http from '@/helpers/http'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+
+const driverDetails = reactive({
+    name: '',
+    year: null,
+    make: '',
+    model: '',
+    color: '',
+    license_plate: ''
+})
+
+const handleSaveDriver = () => {
+    http().post('/api/driver', driverDetails)
+        .then((response) => {
+            router.push({
+                name: 'standby'
+            })
+        })
+        .catch((error) => {
+            console.error(error)
+        })
+}
 </script>
 
 <template>
