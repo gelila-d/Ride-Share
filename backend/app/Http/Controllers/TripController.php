@@ -21,7 +21,10 @@ class TripController extends Controller
             'origin',
             'destination',
             'destination_name',
+        
         ]));
+
+        TripCreated::dispatch($trip, $request->user());
 
          return $trip;
 
