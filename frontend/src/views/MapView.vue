@@ -1,13 +1,46 @@
 <script setup>
+import { onMounted, computed } from 'vue'
 import { useLocationStore } from '@/stores/location'
+import { useTripStore } from '@/stores/trip'
 import { useRouter } from 'vue-router'
-import { GoogleMap, Marker, Polyline } from 'vue3-google-map';
+import { GoogleMap, Marker, Polyline } from 'vue3-google-map'
+import http from '@/helpers/http'
 
 const locationStore = useLocationStore()
+const tripStore = useTripStore()
 const router = useRouter()
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-import { onMounted, computed } from 'vue'
+
+const handleConfirmTrip = () => {
+    console.log('Confirming trip...', {
+        origin: locationStore.current.geometry,
+        destination: locationStore.destination.geometry,
+        name: locationStore.destination.name
+    })
+
+    if (!locationStore.current.geometry.lat || !locationStore.destination.geometry.lat) {
+        alert('Please select a destination and allow location access.')
+        return
+    }
+
+    http().post('/api/trip', {
+        origin: locationStore.current.geometry,
+        destination: locationStore.destination.geometry,
+        destination_name: locationStore.destination.name
+    })
+        .then((response) => {
+            console.log('Trip created successfully:', response.data)
+            tripStore.$patch(response.data)
+            router.push({
+                name: 'trip'
+            })
+        })
+        .catch((error) => {
+            console.error('Failed to create trip:', error.response?.data || error.message)
+            alert('Failed to create trip. Please try again.')
+        })
+}
 
 onMounted(async () => {
     await locationStore.updateCurrentLocation()
@@ -70,7 +103,7 @@ const destinationPosition = computed(() => {
         </div>
         <div class="bg-gray-50 px-4 py-3 text-right sm:px-6">
           <button
-            @click="router.push({ name: 'trip' })"
+            @click="handleConfirmTrip"
             class="inline-flex w-32 justify-center rounded-md border border-transparent bg-black text-white py-2 hover:bg-gray-800 transition-colors"
           >
             Let's Go!

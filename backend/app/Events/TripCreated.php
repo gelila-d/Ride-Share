@@ -38,4 +38,9 @@ private $user;
             new Channel('drivers'),
         ];
     }
+
+    public function broadcastAs()
+    {
+        return 'TripCreated';
+    }
 }

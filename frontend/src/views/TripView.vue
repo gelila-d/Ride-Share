@@ -1,24 +1,53 @@
 <script setup>
+import { onMounted, computed, ref } from 'vue'
 import { useLocationStore } from '@/stores/location'
+import { useTripStore } from '@/stores/trip'
 import { useRouter } from 'vue-router'
 import { GoogleMap, Marker, Polyline } from 'vue3-google-map'
-import { onMounted, computed, ref } from 'vue'
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
+import http from '@/helpers/http'
 
 const locationStore = useLocationStore()
+const tripStore = useTripStore()
 const router = useRouter()
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 const driverAccepted = ref(false)
 
 const driver = ref({
-    name: 'Abebe Kebede',
-    car: 'Toyota Yaris · White',
-    plate: 'AA-3-12345',
+    name: '',
+    car: '',
+    plate: '',
     rating: 4.8
 })
 
 onMounted(async () => {
     await locationStore.updateCurrentLocation()
+
+    http().get('/api/user').then((response) => {
+        const user = response.data
+        window.Pusher = Pusher
+        let echo = new Echo({
+            broadcaster: 'reverb',
+            key: import.meta.env.VITE_REVERB_APP_KEY,
+            wsHost: import.meta.env.VITE_REVERB_HOST,
+            wsPort: import.meta.env.VITE_REVERB_PORT,
+            wssPort: import.meta.env.VITE_REVERB_PORT,
+            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+            enabledTransports: ["ws", "wss"],
+        })
+
+        echo.channel(`passenger.${user.id}`)
+            .listen('.TripAccepted', (e) => {
+                driverAccepted.value = true
+                tripStore.$patch(e.trip)
+
+                driver.value.name = e.trip.driver.user.name
+                driver.value.car = `${e.trip.driver.make} ${e.trip.driver.model} · ${e.trip.driver.color}`
+                driver.value.plate = e.trip.driver.license_plate
+            })
+    })
 })
 
 const mapCenter = computed(() => {

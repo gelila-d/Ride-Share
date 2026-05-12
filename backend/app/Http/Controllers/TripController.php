@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\TripAccepted;
+use App\Events\TripCreated;
 use App\Events\TripEnded;
 use App\Events\TripLocationUpdated;
 use App\Events\TripStarted;
@@ -24,6 +25,7 @@ class TripController extends Controller
         
         ]));
 
+        \Log::info('Dispatching TripCreated event', ['trip_id' => $trip->id]);
         TripCreated::dispatch($trip, $request->user());
 
          return $trip;
