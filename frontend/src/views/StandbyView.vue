@@ -1,7 +1,7 @@
 <script setup>
 import Loader from '@/components/Loader.vue'
 import Echo from 'laravel-echo';
-import { onMounted, ref } from 'vue';
+import { onMounted, computed } from 'vue';
 import Pusher from 'pusher-js';
 import { useTripStore } from '@/stores/trip';
 import { GoogleMap, Marker } from 'vue3-google-map';
@@ -10,8 +10,13 @@ import { useRouter } from 'vue-router';
 
 import { useLocationStore } from '@/stores/location';
 
-const title = ref('Waiting for ride request...')
 const trip = useTripStore()
+const title = computed(() => {
+    if (trip.id) {
+        return 'Ride requested '
+    }
+    return 'Waiting for ride request...'
+})
 const locationStore = useLocationStore()
 const router = useRouter()
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
@@ -37,7 +42,6 @@ onMounted(() => {
 
     echo.channel('drivers').listen('.TripCreated', (e) => {
         console.log('TripCreated event received:', e);
-        title.value = 'Ride requested:'
         trip.$patch(e.trip)
         console.log('Updated trip store:', trip.id);
     })
@@ -45,7 +49,6 @@ onMounted(() => {
 
 const handleDecline = () => {
     trip.$reset()
-    title.value = 'Waiting for ride request...'
 }
 
 const handleAccept = async () => {
