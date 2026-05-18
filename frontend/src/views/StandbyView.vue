@@ -48,7 +48,7 @@ onMounted(() => {
 })
 
 const handleDecline = () => {
-    trip.$reset()
+    trip.reset()
 }
 
 const handleAccept = async () => {

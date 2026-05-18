@@ -54,7 +54,7 @@ public function show(Request $request, Trip $trip)
     ], 403);
 
 }
-public function accept (Request $request, $trip){
+public function accept (Request $request, Trip $trip){
 
    $request->validate([
     'driver_location' => 'required',]);
@@ -71,7 +71,7 @@ public function accept (Request $request, $trip){
 }
 
 
-public function start (Request $request, $trip){
+public function start (Request $request, Trip $trip){
 
     $trip->update([
         'is_started' => true,
@@ -83,7 +83,7 @@ public function start (Request $request, $trip){
 
 }
 
-public function end (Request $request, $trip){
+public function end (Request $request, Trip $trip){
      $trip->update([
         'is_completed' => true,
     ]);
@@ -95,7 +95,7 @@ public function end (Request $request, $trip){
 
 }
  
-public function location (Request $request, $trip){
+public function location (Request $request, Trip $trip){
 
     $request->validate([
         'driver_location' => 'required',
