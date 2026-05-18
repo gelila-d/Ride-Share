@@ -48,11 +48,16 @@ onMounted(() => {
 })
 
 const handleDecline = () => {
+    console.log('Decline button clicked')
     trip.reset()
+    console.log('Trip store reset, current trip.id:', trip.id)
 }
 
 const handleAccept = async () => {
+    console.log('Accept button clicked, updating location...')
     await locationStore.updateCurrentLocation()
+    console.log('Location updated:', locationStore.current.geometry)
+    console.log('Sending accept POST request for trip ID:', trip.id)
     http().post(`/api/trip/${trip.id}/accept`, {
         driver_location: locationStore.current.geometry
     })
