@@ -28,11 +28,16 @@ export const useLocationStore = defineStore('location', () => {
 
     const updateCurrentLocation = async() => {
         try {
-            const userLocation = await getUserLocation()
+            const userLocation = await Promise.race([
+                getUserLocation(),
+                new Promise((resolve, reject) => setTimeout(() => reject(new Error('Location timeout')), 3000))
+            ])
             current.geometry.lat = userLocation.coords.latitude
             current.geometry.lng = userLocation.coords.longitude
         } catch (error) {
             console.error('Error getting user location:', error)
+            current.geometry.lat = 9.0102
+            current.geometry.lng = 38.7615
         }
     }
 
