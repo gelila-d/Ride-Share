@@ -4,7 +4,7 @@ import Echo from 'laravel-echo';
 import { onMounted, computed } from 'vue';
 import Pusher from 'pusher-js';
 import { useTripStore } from '@/stores/trip';
-import { GoogleMap, Marker } from 'vue3-google-map';
+import { GoogleMap, Marker, Polyline } from 'vue3-google-map';
 import http from '@/helpers/http';
 import { useRouter } from 'vue-router';
 
@@ -90,6 +90,20 @@ const handleAccept = async () => {
                             style="width: 100%; height: 256px"
                         >
                             <Marker :options="{ position: { lat: parseFloat(trip.destination.lat), lng: parseFloat(trip.destination.lng) } }" />
+                            <Marker v-if="trip.origin.lat" :options="{ position: { lat: parseFloat(trip.origin.lat), lng: parseFloat(trip.origin.lng) } }" />
+                            <Polyline
+                                v-if="trip.origin.lat && trip.destination.lat"
+                                :options="{
+                                    path: [
+                                        { lat: parseFloat(trip.origin.lat), lng: parseFloat(trip.origin.lng) },
+                                        { lat: parseFloat(trip.destination.lat), lng: parseFloat(trip.destination.lng) }
+                                    ],
+                                    geodesic: true,
+                                    strokeColor: '#3B82F6',
+                                    strokeOpacity: 0.8,
+                                    strokeWeight: 4,
+                                }"
+                            />
                         </GoogleMap>
                     </div>
                     <div class="mt-4">
