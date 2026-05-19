@@ -6,6 +6,8 @@ import { reactive, ref } from "vue"
 export const useTripStore = defineStore('trip', () => {
     const id = ref(null)
     const user_id = ref(null)
+    const is_started = ref(false)
+    const is_completed = ref(false)
 
 
     const origin = reactive({
@@ -23,6 +25,8 @@ export const useTripStore = defineStore('trip', () => {
     const reset = () => {
         id.value = null
         user_id.value = null
+        is_started.value = false
+        is_completed.value = false
         origin.lat = null
         origin.lng = null
         destination.lat = null
@@ -30,5 +34,5 @@ export const useTripStore = defineStore('trip', () => {
         destination_name.value = ''
     }
 
-    return { id, user_id, origin, destination, destination_name, reset }
+    return { id, user_id, is_started, is_completed, origin, destination, destination_name, reset }
 })
