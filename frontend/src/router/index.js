@@ -88,8 +88,11 @@ const checkTokenAuthenticity = () => {
       // Token is valid
     })
     .catch(error => {
-      localStorage.removeItem('token')
-      router.push({ name: 'login' })
+      console.error('Token authenticity check failed:', error)
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        localStorage.removeItem('token')
+        router.push({ name: 'login' })
+      }
     })
 }
 export default router
