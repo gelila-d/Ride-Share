@@ -21,6 +21,34 @@ const locationStore = useLocationStore()
 const router = useRouter()
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
+const mapCenter = computed(() => {
+    if (trip.origin.lat && trip.destination.lat) {
+        return {
+            lat: (parseFloat(trip.origin.lat) + parseFloat(trip.destination.lat)) / 2,
+            lng: (parseFloat(trip.origin.lng) + parseFloat(trip.destination.lng)) / 2
+        }
+    }
+    if (trip.destination.lat) {
+        return { lat: parseFloat(trip.destination.lat), lng: parseFloat(trip.destination.lng) }
+    }
+    return { lat: 0, lng: 0 }
+})
+
+const mapZoom = computed(() => {
+    if (trip.origin.lat && trip.destination.lat) {
+        const latDiff = Math.abs(parseFloat(trip.origin.lat) - parseFloat(trip.destination.lat))
+        const lngDiff = Math.abs(parseFloat(trip.origin.lng) - parseFloat(trip.destination.lng))
+        const maxDiff = Math.max(latDiff, lngDiff)
+        
+        if (maxDiff < 0.01) return 15
+        if (maxDiff < 0.05) return 13
+        if (maxDiff < 0.1) return 12
+        if (maxDiff < 0.2) return 11
+        return 10
+    }
+    return 14
+})
+
 window.Pusher = Pusher;
 
 onMounted(() => {
@@ -85,8 +113,8 @@ const handleAccept = async () => {
                     <div>
                         <GoogleMap 
                             :api-key="apiKey"
-                            :zoom="14"
-                            :center="{ lat: parseFloat(trip.destination.lat), lng: parseFloat(trip.destination.lng) }"
+                            :zoom="mapZoom"
+                            :center="mapCenter"
                             style="width: 100%; height: 256px"
                         >
                             <Marker :options="{ position: { lat: parseFloat(trip.destination.lat), lng: parseFloat(trip.destination.lng) } }" />
